@@ -1,0 +1,57 @@
+---
+title: "practice strings"
+author: "kaiju"
+format: html
+---
+
+
+```{r}
+
+library(stringr)
+library(stringi)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+
+alarm_report <- data.frame(
+  stringsAsFactors = FALSE,
+              date = c("2020-03-14", "2020-03-15", "2020-04-10", "2020-04-18"),
+          building = c("Engineering-North",
+                       "Bren Hall","Engineering-South","Engr-North"),
+     alarm_message = c("10:02am -- HVAC system down, facilities management alerted",
+                       "8:24am -- Elevator North out of service",
+                       "12:41am -- Fire alarm, UCSB fire responded and cleared",
+                       "9:58pm -- Campus point emergency siren, UCPD responded")
+)
+
+# Replace the “Engr” with “Engineering” in the building column
+
+
+alarm_report_engr <- alarm_report %>%
+  mutate(building = str_replace(building , pattern = "Engr", replacement = "Engineering"))
+
+# separate the building into two separate columns 
+
+alarm_report_separate <- alarm_report %>%
+  separate( building, "-", into = c("building","wing"))
+
+# keep observations with the word "responded"
+
+alarm_message_responded <- alarm_report %>% filter(grepl("responded", alarm_message)) 
+
+# separate the message "time" from the rest of the message by separating at "--"
+
+alarm_time <- alarm_report %>% separate ("alarm_message", into = c("time", "message"), sep = "--")
+
+# convert the date column to a date class using lubridate
+
+class(alarm_report$date)
+
+alarm_report$date <- ymd(alarm_report$date)
+
+view(alarm_report)
+class(alarm_report$date)
+
+
+```
+

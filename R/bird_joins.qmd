@@ -1,0 +1,71 @@
+---
+title: "bird_joins.qmd"
+author: "Kaiju"
+format: html
+---
+```{r}
+library(tidyverse)
+library(lubridate)
+
+bird_observations <- read_csv(here::here("data","52_pp52_birds_1.csv"))
+
+sites <- read_csv(here::here("data","52_pp52_sites_1.csv"))
+
+surveys <- read_csv(here::here("data","52_pp52_surveys_1.csv"))
+
+taxalist <- read_csv(here::here("data","52_pp52_taxalist_1.csv"))
+
+
+# subset of bird_obs containing only obs for species id "BHCO" and "RWBL"
+
+birds_subset <- bird_observations %>%
+  filter(species_id %in% c("BHCO","RWBL")) %>% 
+  filter(site_id %in% c("LI-W","NU-C"))
+
+
+# Left join practice -> update birds_subset so that it also includes sites and taxalist information
+
+birds_left <- birds_subset %>% 
+  left_join(.,sites, by = "site_id") %>% 
+  left_join(., taxalist, by = "species_id")
+
+# from a full join i expect all birds_subset and sites data to be preserved in the new object
+
+birds_full <- birds_subset %>% full_join(., sites, by = "site_id")
+  
+
+# Task 2 Data Wrangling and visualization with birds
+
+bird_observations %>%
+  rename(bird_obs_notes = notes)
+
+# create a subset that contains all observations in the birds dataset, joins the taxonomic, site and survey information to it, and is finally limited to only columns survey_date, common_name, park_name, and bird_count
+
+birds_subset_comp <- bird_observations %>% 
+  left_join(., taxalist, by = "species_id") %>%
+  left_join(., sites, by = "site_id") %>% 
+  left_join(., surveys, by = "survey_id") %>%
+  select(survey_date,common_name, park_name, bird_count)
+
+
+# use lubridate::month() to add a new column called survey_month
+
+ birds_subset_comp <- birds_subset_comp %>%
+  mutate(survey_month = month(survey_date)) %>%
+   mutate(survey_month = as.factor(survey_month))
+
+class(birds_subset_comp$survey_month)
+
+birds_subset_comp <- birds_subset_comp %>% relocate("survey_month", .after = "survey_date")
+
+birds_subset_comp <- birds_subset_comp %>%
+  group_by(park_name, survey_month) %>%
+  mutate(count = n()) 
+
+birds_subset_comp_parks <- birds_subset_comp %>%
+  filter(park_name %in% c("Lindo","Orme","Palomino", "Sonrisa"))
+  
+
+
+```
+
